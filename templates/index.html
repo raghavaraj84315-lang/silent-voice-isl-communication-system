@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Voice - Sign → Text → Voice AI Hub</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('silent_voice_theme') || 'dark';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#151d2c', 900: '#0f172a', 950: '#070a13' },
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1'
+                        },
+                        accent: {
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-[#070a13] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <header class="glass-panel sticky top-0 z-50 border-b border-slate-200/80 dark:border-white/10 px-4 sm:px-6 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/" class="w-10 h-10 rounded-xl overflow-hidden border border-sky-500/30 shadow-md shadow-sky-500/15 bg-slate-950 flex items-center justify-center p-0.5 group">
+                    <img src="/static/logo_icon.png" alt="Silent Voice Logo" class="w-full h-full object-cover rounded-[10px] group-hover:scale-105 transition-transform">
+                </a>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-lg sm:text-xl font-black tracking-tight flex items-center">
+                            <span class="text-slate-900 dark:text-white">Silent</span>
+                            <span class="bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent ml-1">Voice</span>
+                        </h1>
+                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-sky-500/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-500/30">AI Live</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Sign <span class="text-sky-500">→</span> Text <span class="text-indigo-500">→</span> Voice</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-2.5">
+                <!-- Dark / Light Theme Toggle -->
+                <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 transition shadow-sm" title="Toggle Theme (Dark / Light)">
+                    <svg class="theme-icon-sun w-4 h-4 text-amber-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <svg class="theme-icon-moon w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </button>
+
+                <div class="hidden sm:flex items-center space-x-2 bg-slate-100 dark:bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/5">
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Mode:</span>
+                    <span id="current-mode-badge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-sky-500/15 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-500/30">LETTERS</span>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-2 bg-slate-100 dark:bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-indicator"></span>
+                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">CAMERA ACTIVE</span>
+                </div>
+
+                {% if user and user.role == 'admin' %}
+                <a href="/admin" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold transition shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span class="hidden sm:inline">Admin Console</span>
+                </a>
+                {% endif %}
+
+                <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/5">
+                    <div class="w-5 h-5 rounded-full {{ 'bg-amber-500/20 text-amber-500' if user and user.role == 'admin' else 'bg-sky-500/20 text-sky-500' }} flex items-center justify-center text-[10px] font-bold">
+                        {{ user.username[0].upper() if user else 'U' }}
+                    </div>
+                    <span class="text-xs text-slate-800 dark:text-slate-200 font-bold">{{ user.username if user else 'User' }}</span>
+                </div>
+
+                <button onclick="document.getElementById('shortcuts-modal').classList.remove('hidden')" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Keyboard Shortcuts">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+
+                <a href="/logout" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-600 dark:text-rose-400 transition" title="Log Out">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Camera Feed & Mode Switches -->
+        <section class="lg:col-span-7 flex flex-col space-y-4">
+            <div class="glass-panel rounded-3xl p-3 relative overflow-hidden group">
+                <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/50 dark:border-white/10 shadow-xl">
+                    <img id="video-stream" src="/video_feed" alt="Silent Voice Live Stream" class="w-full h-full object-cover">
+
+                    <div class="absolute top-3 left-3 flex items-center space-x-2">
+                        <span id="hud-mode" class="px-3 py-1 rounded-lg text-xs font-extrabold uppercase bg-black/75 backdrop-blur-md text-sky-400 border border-sky-500/30">LETTERS</span>
+                        <span class="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-black/75 backdrop-blur-md text-emerald-400 border border-emerald-500/30">30 FPS</span>
+                    </div>
+
+                    <div class="absolute bottom-3 inset-x-3 bg-black/75 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 flex items-center justify-between">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span id="hud-status" class="text-sm font-bold text-white tracking-wide">Show Sign</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-slate-300 font-medium">MediaPipe Vision AI</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-2.5 flex items-center justify-between gap-2 px-1">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <select id="camera-select" onchange="handleCameraChange(this.value)" class="bg-slate-100 dark:bg-slate-900 text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500">
+                            <option value="0">Camera 0 (Default)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-2.5 flex flex-wrap items-center justify-between gap-3 p-1">
+                    <div class="flex items-center bg-slate-100 dark:bg-slate-900/90 p-1 rounded-xl border border-slate-200 dark:border-white/5 space-x-1 w-full sm:w-auto">
+                        <button id="btn-mode-letters" class="flex-1 sm:flex-none py-2 px-4 text-xs font-bold rounded-lg bg-sky-600 text-white shadow-md shadow-sky-600/20 transition-all">
+                            Letters Mode (L)
+                        </button>
+                        <button id="btn-mode-words" class="flex-1 sm:flex-none py-2 px-4 text-xs font-bold rounded-lg bg-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                            Words Mode (W)
+                        </button>
+                    </div>
+
+                    <div class="flex items-center space-x-3 bg-slate-100 dark:bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/5">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                            <label for="toggle-auto-speak" class="text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer select-none">Auto-Voice Signs</label>
+                        </div>
+                        <input type="checkbox" id="toggle-auto-speak" checked class="w-4 h-4 accent-emerald-500 cursor-pointer rounded">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Recognition Output, Languages & Audio -->
+        <section class="lg:col-span-5 flex flex-col space-y-4">
+            <!-- Live Detected Gesture Card -->
+            <div class="glass-panel rounded-3xl p-5 border border-slate-200 dark:border-white/10 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Live Detected Gesture</span>
+                    <div id="speaking-indicator" class="hidden items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                        <span class="wave-bar"></span>
+                        <span class="wave-bar"></span>
+                        <span class="wave-bar"></span>
+                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider ml-1">Speaking</span>
+                    </div>
+                </div>
+
+                <div class="flex items-baseline justify-between">
+                    <div id="detected-status" class="text-2xl font-black text-sky-600 dark:text-sky-400 tracking-tight">Show a letter sign</div>
+                    <span id="confidence-label" class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300">0%</span>
+                </div>
+
+                <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-900 border border-slate-300/40 dark:border-white/5 overflow-hidden">
+                    <div id="confidence-bar" class="h-full bg-sky-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <div class="flex items-center space-x-2 text-xs text-amber-600 dark:text-amber-400 font-mono">
+                    <span class="text-slate-400">Top Guesses:</span>
+                    <span id="top-guesses" class="truncate font-semibold">—</span>
+                </div>
+            </div>
+
+            <!-- Recognized Text Hub -->
+            <div class="glass-panel rounded-3xl p-5 border border-slate-200 dark:border-white/10 flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/5 pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recognized Output</span>
+                            <button onclick="smoothCurrentSentence()" id="btn-smooth" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-[11px] flex items-center space-x-1 shadow-sm transition" title="Format raw sign tokens into a fluent grammatical sentence">
+                                <span>✨ AI Smooth</span>
+                            </button>
+                            <label class="hidden sm:flex items-center space-x-1 text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                                <input type="checkbox" id="toggle-auto-smooth" class="w-3 h-3 accent-indigo-500 rounded cursor-pointer">
+                                <span>Auto</span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center bg-slate-100 dark:bg-slate-900/90 p-1 rounded-xl border border-slate-200 dark:border-white/10 space-x-1">
+                            <button id="lang-btn-english" onclick="setLanguage('english')" class="lang-pill px-3 py-1.5 text-xs font-bold rounded-lg bg-sky-600 text-white shadow-sm transition-all flex items-center space-x-1.5">
+                                <span>🇬🇧</span><span>English</span>
+                            </button>
+                            <button id="lang-btn-hindi" onclick="setLanguage('hindi')" class="lang-pill px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center space-x-1.5">
+                                <span>🇮🇳</span><span>हिन्दी</span>
+                            </button>
+                            <button id="lang-btn-kannada" onclick="setLanguage('kannada')" class="lang-pill px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center space-x-1.5">
+                                <span>🟡</span><span>ಕನ್ನಡ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="ai-smoothed-banner" class="hidden p-3 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 space-y-1 text-xs transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-indigo-700 dark:text-indigo-300 flex items-center space-x-1.5">
+                                <span>✨ AI Grammatically Smoothed:</span>
+                            </span>
+                            <span id="ai-source-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">Fluent English</span>
+                        </div>
+                        <div id="ai-smoothed-text" class="text-sm font-bold text-slate-900 dark:text-white">...</div>
+                    </div>
+
+                    <div id="active-lang-card" class="glass-card rounded-2xl p-4 border border-sky-500/30 bg-sky-50/70 dark:bg-sky-950/20 transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="active-lang-badge" class="text-xs font-bold text-sky-600 dark:text-sky-400 flex items-center space-x-1.5">
+                                <span id="active-lang-flag">🇬🇧</span>
+                                <span id="active-lang-name">English</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono ml-2">(Active Output)</span>
+                            </span>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="speakActiveText()" class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition" title="Voice Output (Press S)">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                </button>
+                                <button onclick="copyActiveText()" class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition" title="Copy Text">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="active-lang-text" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white min-h-[4rem] break-words flex items-center">
+                            <span class="text-slate-400 dark:text-slate-500 font-normal text-sm">Show signs to generate text...</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-1">
+                        <button onclick="toggleOtherLangs()" id="btn-toggle-other-langs" class="text-xs text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 flex items-center space-x-1.5 transition">
+                            <svg id="chevron-other-langs" class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            <span>Compare with other languages</span>
+                        </button>
+
+                        <div id="other-langs-container" class="hidden mt-2.5 space-y-2">
+                            <div id="sec-card-english" class="glass-card rounded-xl p-2.5 border border-slate-200 dark:border-white/5 bg-slate-100/80 dark:bg-slate-900/60 flex items-center justify-between text-xs">
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-sky-600 dark:text-sky-400">🇬🇧 English:</span>
+                                    <span id="text-english" class="text-slate-800 dark:text-slate-200 font-medium">—</span>
+                                </div>
+                                <button onclick="speakText('english')" class="text-slate-400 hover:text-sky-600 dark:hover:text-sky-400" title="Voice English">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                </button>
+                            </div>
+                            <div id="sec-card-hindi" class="glass-card rounded-xl p-2.5 border border-slate-200 dark:border-white/5 bg-slate-100/80 dark:bg-slate-900/60 flex items-center justify-between text-xs">
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-emerald-700 dark:text-emerald-400">🇮🇳 हिन्दी:</span>
+                                    <span id="text-hindi" class="text-emerald-700 dark:text-emerald-300 font-indic font-medium">—</span>
+                                </div>
+                                <button onclick="speakText('hindi')" class="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400" title="Voice Hindi">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                </button>
+                            </div>
+                            <div id="sec-card-kannada" class="glass-card rounded-xl p-2.5 border border-slate-200 dark:border-white/5 bg-slate-100/80 dark:bg-slate-900/60 flex items-center justify-between text-xs">
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-amber-700 dark:text-amber-400">🟡 ಕನ್ನಡ:</span>
+                                    <span id="text-kannada" class="text-amber-700 dark:text-amber-300 font-indic font-medium">—</span>
+                                </div>
+                                <button onclick="speakText('kannada')" class="text-slate-400 hover:text-amber-600 dark:hover:text-amber-400" title="Voice Kannada">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 dark:border-white/5 flex flex-wrap gap-2">
+                    <button id="btn-space" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 transition">
+                        Space
+                    </button>
+                    <button id="btn-backspace" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 transition">
+                        Backspace
+                    </button>
+                    <button id="btn-clear" class="py-2 px-3 text-xs font-bold rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition">
+                        Clear
+                    </button>
+                    <button id="btn-speak-all" onclick="speakActiveText()" class="py-2 px-4 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 transition flex items-center space-x-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                        <span id="btn-speak-label">Speak (S)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Two-Way Communication Card -->
+            <div class="glass-panel rounded-3xl p-5 border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/10 space-y-3.5 shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-2.5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center space-x-1.5">
+                                <span>Two-Way Communication</span>
+                                <span class="px-1.5 py-0.5 text-[9px] rounded bg-emerald-500/15 border border-emerald-500/30">Hearing ➔ Deaf</span>
+                            </span>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Speak into microphone; visual ISL signs will appear</p>
+                        </div>
+                    </div>
+
+                    <select id="speech-lang-select" class="bg-white dark:bg-slate-900 text-[11px] px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500 font-medium">
+                        <option value="en-IN">🇬🇧 English</option>
+                        <option value="hi-IN">🇮🇳 हिन्दी</option>
+                        <option value="kn-IN">🟡 ಕನ್ನಡ</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button id="btn-hearing-mic" onclick="toggleHearingSpeech()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center space-x-2 shadow-md shadow-emerald-600/20 transition">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+                        <span id="hearing-mic-label">Click & Speak</span>
+                    </button>
+                    <input type="text" id="hearing-text-input" placeholder="Or type hearing message here..." class="flex-1 bg-white dark:bg-slate-900/90 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500" onkeydown="if(event.key==='Enter') submitHearingText()">
+                    <button onclick="submitHearingText()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-white/10 transition" title="Submit Message">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                </div>
+
+                <div id="gesture-guide-container" class="hidden space-y-2 pt-2 border-t border-slate-200 dark:border-white/10">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-emerald-700 dark:text-emerald-300 flex items-center space-x-1">
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            <span>ISL Gesture Video & Fingerspelling Reference:</span>
+                        </span>
+                        <span id="gesture-guide-count" class="text-[10px] text-slate-400 font-mono">0 signs</span>
+                    </div>
+                    <div id="gesture-guide-cards" class="flex gap-2.5 overflow-x-auto pb-2 pt-1 pr-1 max-w-full"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lower Section: Vocabulary Explorer, Alphabet Chart & Session History -->
+        <section class="lg:col-span-12 glass-panel rounded-3xl p-6 border border-slate-200 dark:border-white/10 space-y-6">
+            <div class="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4 gap-4">
+                <div class="flex items-center space-x-2">
+                    <button onclick="switchTab('vocab')" id="tab-btn-vocab" class="tab-btn px-4 py-2 text-sm font-bold rounded-xl bg-sky-600 text-white shadow-sm transition">
+                        ISL 40 Words Vocabulary
+                    </button>
+                    <button onclick="switchTab('alphabet')" id="tab-btn-alphabet" class="tab-btn px-4 py-2 text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                        Alphabet Chart & Gestures
+                    </button>
+                    <button onclick="switchTab('history')" id="tab-btn-history" class="tab-btn px-4 py-2 text-sm font-bold rounded-xl bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                        Session History Log
+                    </button>
+                </div>
+
+                <div id="vocab-search-container" class="relative">
+                    <input type="text" id="vocab-search" placeholder="Search signs, Hindi, Kannada..." class="w-64 bg-white dark:bg-slate-900/90 text-xs px-3.5 py-2 pl-9 rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:border-sky-500 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+            </div>
+
+            <div id="tab-vocab" class="tab-content space-y-4">
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <button onclick="filterByCategory('all')" class="vocab-cat-btn px-3 py-1.5 rounded-lg bg-sky-600 text-white font-medium transition">All (40)</button>
+                    <button onclick="filterByCategory('Greetings')" class="vocab-cat-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 font-medium transition">Greetings</button>
+                    <button onclick="filterByCategory('Family')" class="vocab-cat-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 font-medium transition">Family</button>
+                    <button onclick="filterByCategory('Food & Drink')" class="vocab-cat-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 font-medium transition">Food & Drink</button>
+                    <button onclick="filterByCategory('Actions')" class="vocab-cat-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 font-medium transition">Actions</button>
+                    <button onclick="filterByCategory('Places')" class="vocab-cat-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 font-medium transition">Places</button>
+                    <button onclick="filterByCategory('Questions')" class="vocab-cat-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 font-medium transition">Questions</button>
+                </div>
+
+                <div id="vocab-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-96 overflow-y-auto pr-1">
+                </div>
+            </div>
+
+            <div id="tab-alphabet" class="tab-content hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-white/10 space-y-3 bg-white/80 dark:bg-slate-900/60">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Indian Sign Language Alphabet Chart</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Two-handed Indian Sign Language (ISL) finger spelling chart for letter recognition.</p>
+                        <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-950">
+                            <img src="/static/sign_chart.png" alt="ISL Sign Chart" class="w-full h-auto object-contain">
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-white/10 space-y-3 bg-white/80 dark:bg-slate-900/60">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">How to Sign</h3>
+                        <div class="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                            <div class="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-500/20">
+                                <span class="font-bold text-sky-700 dark:text-sky-400">Letters Mode:</span> Hold a letter steady in front of the camera for about 1 second. Once accepted, it appears in your text.
+                            </div>
+                            <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-500/20">
+                                <span class="font-bold text-indigo-700 dark:text-indigo-400">Words Mode:</span> Raise both hands into camera view to start a sign gesture. Perform the sign motion, then <strong class="text-slate-900 dark:text-white">lower your hands</strong>. The system recognizes the word automatically when your hands drop!
+                            </div>
+                            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/20">
+                                <span class="font-bold text-emerald-700 dark:text-emerald-400">Auto-Voice:</span> When enabled, every recognized sign is immediately spoken aloud in the selected language.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-history" class="tab-content hidden space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/5 pb-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Session Transcript History</span>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Timestamped multi-language log saved to database</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportTranscripts('pdf')" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm" title="Download Formatted Medical / Meeting PDF Report">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span>Download PDF</span>
+                        </button>
+                        <button onclick="exportTranscripts('csv')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm" title="Export Spreadsheet with UTF-8 Indic Support">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span>CSV</span>
+                        </button>
+                        <button onclick="exportTranscripts('txt')" class="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center space-x-1.5" title="Export Text Document">
+                            <span>TXT</span>
+                        </button>
+                        <button onclick="clearUserTranscripts()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-xs text-rose-600 dark:text-rose-400 transition" title="Clear all saved transcripts">
+                            Clear Log
+                        </button>
+                    </div>
+                </div>
+                <div id="history-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                    <div class="text-xs text-slate-400 dark:text-slate-500 py-6 text-center">Loading session history...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shortcuts Modal -->
+    <div id="shortcuts-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full rounded-3xl p-6 border border-slate-200 dark:border-white/15 shadow-2xl space-y-4 bg-white dark:bg-slate-950">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                    <span>Keyboard Shortcuts</span>
+                </h3>
+                <button onclick="document.getElementById('shortcuts-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-white/5"><span class="text-slate-500 dark:text-slate-400">Switch Mode</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-sky-600 dark:text-sky-400">L / W / Tab</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-white/5"><span class="text-slate-500 dark:text-slate-400">Voice English</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-sky-600 dark:text-sky-400">1</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-white/5"><span class="text-slate-500 dark:text-slate-400">Voice Hindi</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-emerald-600 dark:text-emerald-400">2</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-white/5"><span class="text-slate-500 dark:text-slate-400">Voice Kannada</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-amber-600 dark:text-amber-400">3</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-white/5"><span class="text-slate-500 dark:text-slate-400">Voice Current Text</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-emerald-600 dark:text-emerald-400">S</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-white/5"><span class="text-slate-500 dark:text-slate-400">Add Space</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">Spacebar</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-white/5"><span class="text-slate-500 dark:text-slate-400">Delete Last Word/Letter</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">Backspace</span></div>
+                <div class="flex justify-between py-1"><span class="text-slate-500 dark:text-slate-400">Clear All Text</span><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-rose-500">C</span></div>
+            </div>
+            <button onclick="document.getElementById('shortcuts-modal').classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-xs text-white transition">Got it</button>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-sky-600', 'text-white', 'shadow-sm');
+                b.classList.add('bg-slate-100', 'dark:bg-slate-900/80', 'text-slate-600', 'dark:text-slate-400');
+            });
+
+            const content = document.getElementById(`tab-${tabId}`);
+            const btn = document.getElementById(`tab-btn-${tabId}`);
+            if (content) content.classList.remove('hidden');
+            if (btn) {
+                btn.classList.add('bg-sky-600', 'text-white', 'shadow-sm');
+                btn.classList.remove('bg-slate-100', 'dark:bg-slate-900/80', 'text-slate-600', 'dark:text-slate-400');
+            }
+
+            const searchContainer = document.getElementById('vocab-search-container');
+            if (searchContainer) {
+                searchContainer.style.display = tabId === 'vocab' ? 'block' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>

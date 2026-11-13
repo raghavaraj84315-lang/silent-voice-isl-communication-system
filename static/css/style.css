@@ -1,0 +1,203 @@
+/* ==========================================================================
+   Silent Voice Design System
+   Human-crafted, modern, accessible design inspired by the Silent Voice identity.
+   Supports full Dark and Light themes with seamless transitions.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap');
+
+/* --- LIGHT THEME (Default) --- */
+:root {
+    --bg-body: #f8fafc;
+    --panel-bg: rgba(255, 255, 255, 0.88);
+    --panel-border: rgba(226, 232, 240, 0.95);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-border: rgba(226, 232, 240, 0.85);
+    --card-hover-border: rgba(14, 165, 233, 0.45);
+    --text-main: #0f172a;
+    --text-sub: #334155;
+    --text-muted: #64748b;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --header-bg: rgba(255, 255, 255, 0.92);
+    --header-border: rgba(226, 232, 240, 0.9);
+
+    /* Brand accents directly matching the Silent Voice logo */
+    --brand-cyan: #0284c7;
+    --brand-cyan-light: #e0f2fe;
+    --brand-indigo: #4f46e5;
+    --brand-indigo-light: #eef2ff;
+    --brand-gradient: linear-gradient(135deg, #0284c7 0%, #6366f1 100%);
+    --brand-gradient-hover: linear-gradient(135deg, #0369a1 0%, #4f46e5 100%);
+
+    /* Semantic status */
+    --status-success: #059669;
+    --status-success-bg: rgba(5, 150, 105, 0.08);
+    --status-warning: #d97706;
+    --status-warning-bg: rgba(217, 119, 6, 0.08);
+    --status-danger: #e11d48;
+    --status-danger-bg: rgba(225, 29, 72, 0.08);
+
+    /* Shadows */
+    --shadow-panel: 0 10px 30px -8px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+    --shadow-card: 0 2px 6px -1px rgba(15, 23, 42, 0.05), 0 1px 3px -1px rgba(15, 23, 42, 0.03);
+    --shadow-glow: 0 4px 14px 0 rgba(2, 132, 199, 0.15);
+
+    /* Scrollbars */
+    --scrollbar-track: #f1f5f9;
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #94a3b8;
+}
+
+/* --- DARK THEME (Matches Logo Midnight Palette) --- */
+html.dark, body.dark-theme, [data-theme="dark"] {
+    --bg-body: #070a13;
+    --panel-bg: rgba(14, 20, 34, 0.82);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --card-bg: rgba(19, 27, 46, 0.65);
+    --card-border: rgba(255, 255, 255, 0.06);
+    --card-hover-border: rgba(56, 189, 248, 0.35);
+    --text-main: #f8fafc;
+    --text-sub: #cbd5e1;
+    --text-muted: #94a3b8;
+    --input-bg: rgba(11, 16, 28, 0.9);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --header-bg: rgba(9, 13, 23, 0.88);
+    --header-border: rgba(255, 255, 255, 0.08);
+
+    --brand-cyan: #38bdf8;
+    --brand-cyan-light: rgba(56, 189, 248, 0.12);
+    --brand-indigo: #818cf8;
+    --brand-indigo-light: rgba(129, 140, 248, 0.12);
+    --brand-gradient: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    --brand-gradient-hover: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+
+    --status-success: #10b981;
+    --status-success-bg: rgba(16, 185, 129, 0.12);
+    --status-warning: #f59e0b;
+    --status-warning-bg: rgba(245, 158, 11, 0.12);
+    --status-danger: #f43f5e;
+    --status-danger-bg: rgba(244, 63, 94, 0.12);
+
+    --shadow-panel: 0 12px 32px 0 rgba(0, 0, 0, 0.45);
+    --shadow-card: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+    --shadow-glow: 0 4px 20px 0 rgba(14, 165, 233, 0.25);
+
+    --scrollbar-track: rgba(10, 14, 23, 0.8);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+}
+
+/* Base Body */
+body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.font-indic {
+    font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', 'Nirmala UI', sans-serif;
+}
+
+/* Glass Panels & Surfaces */
+.glass-panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    box-shadow: var(--shadow-panel);
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow-card);
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    border-color: var(--card-hover-border);
+    transform: translateY(-1px);
+}
+
+/* Brand Gradient Text (Mirrors logo "Voice" styling) */
+.brand-gradient-text {
+    background: linear-gradient(135deg, #0ea5e9 0%, #818cf8 50%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.brand-btn-primary {
+    background: var(--brand-gradient);
+    color: #ffffff;
+    box-shadow: var(--shadow-glow);
+    transition: all 0.2s ease;
+}
+
+.brand-btn-primary:hover {
+    background: var(--brand-gradient-hover);
+    filter: brightness(1.05);
+    transform: translateY(-0.5px);
+}
+
+/* Indicator Animations */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+.pulse-indicator {
+    animation: pulse-ring 2s infinite;
+}
+
+/* Audio wave animation */
+@keyframes wave-bar {
+    0%, 100% { height: 4px; }
+    50% { height: 16px; }
+}
+
+.wave-bar {
+    display: inline-block;
+    width: 3px;
+    background: #0ea5e9;
+    border-radius: 2px;
+    animation: wave-bar 0.9s ease-in-out infinite;
+}
+
+.wave-bar:nth-child(2) { animation-delay: 0.18s; }
+.wave-bar:nth-child(3) { animation-delay: 0.36s; }
+.wave-bar:nth-child(4) { animation-delay: 0.1s; }
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}

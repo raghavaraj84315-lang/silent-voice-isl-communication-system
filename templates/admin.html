@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Voice - Admin Console</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('silent_voice_theme') || 'dark';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#151d2c', 900: '#0f172a', 950: '#070b14' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-[#070a13] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    <header class="glass-panel sticky top-0 z-50 border-b border-slate-200/80 dark:border-white/10 px-4 sm:px-6 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <a href="/admin" class="w-10 h-10 rounded-xl overflow-hidden border border-sky-500/30 shadow-md shadow-sky-500/15 bg-slate-950 flex items-center justify-center p-0.5">
+                    <img src="/static/logo_icon.png" alt="Silent Voice" class="w-full h-full object-cover rounded-[10px]">
+                </a>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-lg sm:text-xl font-black tracking-tight flex items-center">
+                            <span class="text-slate-900 dark:text-white">Admin</span>
+                            <span class="bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent ml-1">Console</span>
+                        </h1>
+                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-sky-500/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-500/30">
+                            Superuser
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Silent Voice AI Management & System Controls</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 transition shadow-sm" title="Toggle Theme (Dark / Light)">
+                    <svg id="admin-theme-sun" class="w-4 h-4 text-amber-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <svg id="admin-theme-moon" class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </button>
+
+                <a href="/" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-700 dark:text-sky-300 transition text-xs font-bold shadow-sm">
+                    <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <span>Launch Live Hub</span>
+                </a>
+
+                <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-900/90 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ current_user.username }}</span>
+                </div>
+
+                <a href="/logout" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-600 dark:text-rose-400 transition" title="Log Out">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-slate-900/60 shadow-sm">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Users</span>
+                    <div id="stat-users-count" class="text-2xl font-black text-slate-900 dark:text-white mt-1">...</div>
+                    <span id="stat-admin-sub" class="text-[11px] text-sky-600 dark:text-sky-400 font-medium">...</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-slate-900/60 shadow-sm">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Vocabulary Words</span>
+                    <div id="stat-vocab-count" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">...</div>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">3 Languages Mapped</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-slate-900/60 shadow-sm">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">AI Models</span>
+                    <div class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">Ready</div>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">RandomForest + ExtraTrees</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-slate-900/60 shadow-sm">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Audio Cache</span>
+                    <div id="stat-audio-count" class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">...</div>
+                    <span id="stat-audio-size" class="text-[11px] text-slate-500 dark:text-slate-400">...</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-6 border border-slate-200 dark:border-white/10 space-y-6">
+            <div class="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4 gap-4">
+                <div class="flex items-center space-x-2">
+                    <button onclick="switchAdminTab('users')" id="tab-btn-users" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-xl bg-sky-600 text-white shadow-sm transition">
+                        User Management
+                    </button>
+                    <button onclick="switchAdminTab('vocab')" id="tab-btn-vocab" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                        Vocabulary & Translations Editor
+                    </button>
+                    <button onclick="switchAdminTab('trainer')" id="tab-btn-trainer" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center space-x-1.5">
+                        <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <span>Gesture Collector & Retrainer</span>
+                    </button>
+                    <button onclick="switchAdminTab('diagnostics')" id="tab-btn-diagnostics" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                        Diagnostics & Cache Controls
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab: Users -->
+            <div id="admin-tab-users" class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Registered System Users</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">View and manage roles or delete accounts.</p>
+                    </div>
+                    <button onclick="openCreateUserModal()" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Add New User</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/5">
+                    <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                        <thead class="bg-slate-100 dark:bg-slate-900/90 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/5">
+                            <tr>
+                                <th class="p-3.5">ID</th>
+                                <th class="p-3.5">Username</th>
+                                <th class="p-3.5">Role</th>
+                                <th class="p-3.5">Created Date</th>
+                                <th class="p-3.5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="divide-y divide-slate-200 dark:divide-white/5 bg-white dark:bg-slate-950/40">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Vocabulary -->
+            <div id="admin-tab-vocab" class="hidden space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">ISL Vocabulary & Multilingual Mapping</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Edit translations for English, Hindi, and Kannada, or add new words.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="admin-vocab-search" oninput="filterAdminVocab(this.value)" placeholder="Filter words..." class="bg-white dark:bg-slate-900/90 text-xs px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 w-48">
+                        <button onclick="openAddWordModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition flex items-center space-x-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span>Add Word</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/5 max-h-[32rem]">
+                    <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                        <thead class="sticky top-0 bg-slate-100 dark:bg-slate-900 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/10 z-10">
+                            <tr>
+                                <th class="p-3.5">English</th>
+                                <th class="p-3.5">Hindi (हिन्दी)</th>
+                                <th class="p-3.5">Kannada (ಕನ್ನಡ)</th>
+                                <th class="p-3.5">Category</th>
+                                <th class="p-3.5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vocab-table-body" class="divide-y divide-slate-200 dark:divide-white/5 bg-white dark:bg-slate-950/40">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Diagnostics -->
+            <div id="admin-tab-diagnostics" class="hidden space-y-6">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">System Diagnostics & Audio Cache</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Monitor model health and manage generated audio assets.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-5 rounded-2xl border border-slate-200 dark:border-white/10 space-y-4 bg-white/80 dark:bg-slate-900/60">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2.5 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold uppercase text-slate-900 dark:text-white">TTS Voice Cache Operations</h4>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Zero-latency speech files on disk</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-white/5 space-y-2 text-xs">
+                            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Cached Audio Files:</span><span id="diag-cache-count" class="font-mono text-sky-600 dark:text-sky-400 font-bold">...</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Disk Consumption:</span><span id="diag-cache-size" class="font-mono text-slate-900 dark:text-white font-bold">...</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Supported Languages:</span><span class="font-mono text-emerald-600 dark:text-emerald-400 font-bold">EN / HI / KN</span></div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 pt-2">
+                            <button onclick="precacheAudio()" id="btn-precache" class="flex-1 py-2 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <span>Pre-cache All Vocabulary</span>
+                            </button>
+                            <button onclick="clearCache()" class="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                                Clear Cache
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-slate-200 dark:border-white/10 space-y-4 bg-white/80 dark:bg-slate-900/60">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold uppercase text-slate-900 dark:text-white">Loaded Machine Learning Models</h4>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Scikit-learn classifiers running in memory</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2.5 text-xs">
+                            <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-white/5 space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-sky-600 dark:text-sky-400">Letters Model (model.pkl)</span>
+                                    <span class="px-2 py-0.5 text-[10px] rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">Active</span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400">RandomForest Classifier (21 keypoints per hand, 126 features)</div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-white/5 space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-indigo-600 dark:text-indigo-400">Words Model (words_model.pkl)</span>
+                                    <span class="px-2 py-0.5 text-[10px] rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">Active</span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400">ExtraTrees Temporal Gesture Classifier (40 vocabulary words)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Trainer -->
+            <div id="admin-tab-trainer" class="hidden space-y-6">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">In-Browser Gesture Collector & Model Retrainer</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Record new dynamic sign gestures via webcam and retrain the AI classifier with one click.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-7 glass-card p-5 rounded-2xl border border-slate-200 dark:border-white/10 space-y-4 bg-white/80 dark:bg-slate-900/60">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase text-slate-900 dark:text-white flex items-center space-x-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>Collector Camera Viewport</span>
+                            </span>
+                            <span id="record-live-status" class="px-2.5 py-0.5 rounded text-[10px] font-mono bg-sky-500/15 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-500/30">Ready</span>
+                        </div>
+
+                        <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
+                            <img src="/video_feed" alt="Collector Camera Stream" class="w-full h-full object-cover">
+                            <div id="record-countdown-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-2">
+                                <span id="record-countdown-number" class="text-6xl font-black text-amber-400 animate-bounce">3</span>
+                                <span id="record-countdown-text" class="text-sm font-bold text-white uppercase tracking-wider">Get Ready (Hands Down)</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">New Word Key (English)</label>
+                                <input type="text" id="rec-word-name" placeholder="e.g. doctor, medicine" class="w-full bg-white dark:bg-slate-900 text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">Category</label>
+                                <select id="rec-word-category" class="w-full bg-white dark:bg-slate-900 text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500">
+                                    <option value="General">General</option>
+                                    <option value="Medical">Medical / Health</option>
+                                    <option value="Places">Places</option>
+                                    <option value="Family">Family</option>
+                                    <option value="Food & Drink">Food & Drink</option>
+                                    <option value="Actions">Actions</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">Hindi Translation (हिन्दी)</label>
+                                <input type="text" id="rec-word-hi" placeholder="e.g. डॉक्टर" class="w-full bg-white dark:bg-slate-900 text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-indic focus:outline-none focus:border-sky-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">Kannada Translation (ಕನ್ನಡ)</label>
+                                <input type="text" id="rec-word-kn" placeholder="e.g. ವೈದ್ಯರು" class="w-full bg-white dark:bg-slate-900 text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-indic focus:outline-none focus:border-sky-500">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 pt-2 border-t border-slate-200 dark:border-white/10">
+                            <button onclick="recordNewGestureSample()" id="btn-record-sample" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-sky-600/20 transition flex items-center justify-center space-x-2">
+                                <span class="w-3 h-3 rounded-full bg-white animate-ping"></span>
+                                <span id="record-btn-text">Record 30 Gesture Frames</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="glass-card p-5 rounded-2xl border border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-950/10 space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold uppercase text-slate-900 dark:text-white">One-Click Model Retrainer</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Retrain ExtraTrees temporal classifier</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between text-slate-600 dark:text-slate-400"><span>Training Status:</span><span id="train-status-label" class="font-bold text-sky-600 dark:text-sky-400">Idle / Ready</span></div>
+                                <div class="flex justify-between text-slate-600 dark:text-slate-400"><span>Model Accuracy:</span><span id="train-accuracy-label" class="font-bold text-emerald-600 dark:text-emerald-400">95.4%</span></div>
+                                <div class="flex justify-between text-slate-600 dark:text-slate-400"><span>Words Recognized:</span><span id="train-words-label" class="font-bold text-slate-900 dark:text-white">40 Words</span></div>
+                            </div>
+
+                            <div class="w-full bg-slate-200 dark:bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-300 dark:border-white/5">
+                                <div id="train-progress-bar" class="h-full bg-sky-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+
+                            <button onclick="triggerRetrain()" id="btn-retrain-model" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-2">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <span id="retrain-btn-text">Retrain Model from Browser</span>
+                            </button>
+
+                            <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-black/80 border border-slate-200 dark:border-white/10 font-mono text-[11px] text-slate-700 dark:text-slate-300 max-h-36 overflow-y-auto space-y-1" id="retrain-terminal-logs">
+                                <div class="text-slate-400 dark:text-slate-500">Ready to retrain on new samples.</div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card p-4 rounded-2xl border border-slate-200 dark:border-white/10 space-y-3 bg-white/80 dark:bg-slate-900/60">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold uppercase text-slate-900 dark:text-white">Recorded Sequences</h4>
+                                <button onclick="loadCollectorStats()" class="text-[11px] text-sky-600 dark:text-sky-400 hover:underline">Refresh</button>
+                            </div>
+                            <div id="collector-sequences-list" class="space-y-1.5 max-h-48 overflow-y-auto text-xs pr-1">
+                                <div class="text-slate-400 dark:text-slate-500 py-3 text-center">Loading words...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create User Modal -->
+    <div id="modal-user" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full rounded-3xl p-6 border border-slate-200 dark:border-white/15 space-y-4 shadow-2xl bg-white dark:bg-slate-950">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Create New User</h3>
+                <button onclick="closeModal('modal-user')" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">&times;</button>
+            </div>
+            <form onsubmit="submitCreateUser(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Username</label>
+                    <input type="text" id="new-user-name" required class="w-full bg-slate-50 dark:bg-slate-900 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Password</label>
+                    <input type="password" id="new-user-pass" required class="w-full bg-slate-50 dark:bg-slate-900 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Role</label>
+                    <select id="new-user-role" class="w-full bg-slate-50 dark:bg-slate-900 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500">
+                        <option value="user">User (Standard Access)</option>
+                        <option value="admin">Admin (Full Access)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-user')" class="px-4 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-md transition">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Word Modal -->
+    <div id="modal-word" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full rounded-3xl p-6 border border-slate-200 dark:border-white/15 space-y-4 shadow-2xl bg-white dark:bg-slate-950">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+                <h3 id="modal-word-title" class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Add Vocabulary Word</h3>
+                <button onclick="closeModal('modal-word')" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">&times;</button>
+            </div>
+            <form onsubmit="submitSaveWord(event)" class="space-y-3">
+                <input type="hidden" id="edit-word-original">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">English Word / Gesture Key</label>
+                    <input type="text" id="word-english" required class="w-full bg-slate-50 dark:bg-slate-900 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Hindi Translation (हिन्दी)</label>
+                    <input type="text" id="word-hindi" required class="w-full bg-slate-50 dark:bg-slate-900 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-indic focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Kannada Translation (ಕನ್ನಡ)</label>
+                    <input type="text" id="word-kannada" required class="w-full bg-slate-50 dark:bg-slate-900 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-indic focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-word')" class="px-4 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md transition">Save Word</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl transition"></div>
+
+    <script>
+        let allUsers = [];
+        let allWords = [];
+
+        function updateAdminThemeIcons() {
+            const isDark = document.documentElement.classList.contains("dark");
+            const sun = document.getElementById("admin-theme-sun");
+            const moon = document.getElementById("admin-theme-moon");
+            if (sun && moon) {
+                if (isDark) {
+                    sun.classList.remove("hidden");
+                    moon.classList.add("hidden");
+                } else {
+                    sun.classList.add("hidden");
+                    moon.classList.remove("hidden");
+                }
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle("dark");
+            localStorage.setItem("silent_voice_theme", isDark ? "dark" : "light");
+            updateAdminThemeIcons();
+            showToast(`Switched to ${isDark ? "dark" : "light"} theme`);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateAdminThemeIcons();
+            loadStats();
+            loadUsers();
+            loadVocab();
+        });
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl transition ${
+                isError ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
+            }`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function switchAdminTab(tab) {
+            ['users', 'vocab', 'diagnostics', 'trainer'].forEach(t => {
+                const el = document.getElementById(`admin-tab-${t}`);
+                if (el) el.classList.add('hidden');
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (btn) btn.className = "admin-tab-btn px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+            });
+            const target = document.getElementById(`admin-tab-${tab}`);
+            if (target) target.classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tab}`);
+            if (activeBtn) activeBtn.className = "admin-tab-btn px-4 py-2 text-xs font-bold rounded-xl bg-sky-600 text-white shadow-sm transition";
+
+            if (tab === 'trainer') {
+                loadCollectorStats();
+                checkRetrainStatus();
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                if (!res.ok) return;
+                const d = await res.json();
+                document.getElementById('stat-users-count').textContent = d.users.total;
+                document.getElementById('stat-admin-sub').textContent = `${d.users.admin} Admins, ${d.users.user} Users`;
+                document.getElementById('stat-vocab-count').textContent = d.vocabulary_count;
+                document.getElementById('stat-audio-count').textContent = d.audio_cache.file_count;
+                document.getElementById('stat-audio-size').textContent = `${d.audio_cache.size_mb} MB on disk`;
+                document.getElementById('diag-cache-count').textContent = `${d.audio_cache.file_count} audio files`;
+                document.getElementById('diag-cache-size').textContent = `${d.audio_cache.size_mb} MB`;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users');
+                if (!res.ok) return;
+                allUsers = await res.json();
+                renderUsersTable();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = allUsers.map(u => {
+                const isRaghav = (u.username || '').toLowerCase() === 'raghav';
+                return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                    <td class="p-3.5 font-mono text-slate-400 dark:text-slate-500">${u.id}</td>
+                    <td class="p-3.5 font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                        <span>${u.username}</span>
+                        ${isRaghav ? '<span class="text-[10px] text-amber-500" title="Fixed Primary Administrator">👑</span>' : ''}
+                    </td>
+                    <td class="p-3.5">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            isRaghav
+                            ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/40 font-black'
+                            : (u.role === 'admin' 
+                                ? 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/30' 
+                                : 'bg-sky-500/15 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-500/30')
+                        }">
+                            ${isRaghav ? 'Fixed Admin' : u.role}
+                        </span>
+                    </td>
+                    <td class="p-3.5 text-slate-500 dark:text-slate-400">${u.created_at ? u.created_at.split('T')[0] : '—'}</td>
+                    <td class="p-3.5 text-right space-x-2">
+                        ${isRaghav ? `
+                            <span class="inline-flex items-center space-x-1.5 text-slate-400 dark:text-slate-500 text-[11px] font-semibold bg-slate-100 dark:bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/5 select-none" title="Admin 'raghav' is a permanent administrator and cannot be modified.">
+                                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span>Fixed Position</span>
+                            </span>
+                        ` : `
+                            <button onclick="toggleUserRole(${u.id}, '${u.role}', '${u.username}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] transition">
+                                ${u.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
+                            </button>
+                            <button onclick="deleteUser(${u.id}, '${u.username}')" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[11px] transition">
+                                Delete
+                            </button>
+                        `}
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        async function toggleUserRole(id, currentRole, username) {
+            if (username && username.toLowerCase() === 'raghav') {
+                showToast("Admin 'raghav' is fixed and cannot be demoted.", true);
+                return;
+            }
+            const newRole = currentRole === 'admin' ? 'user' : 'admin';
+            try {
+                const res = await fetch(`/api/admin/users/${id}/role`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+                const d = await res.json();
+                if (!res.ok) throw new Error(d.detail || "Failed to update role");
+                showToast(`User role updated to ${newRole}`);
+                loadUsers();
+                loadStats();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function deleteUser(id, username) {
+            if (username && username.toLowerCase() === 'raghav') {
+                showToast("Admin 'raghav' is a permanent administrator and cannot be deleted.", true);
+                return;
+            }
+            if (!confirm(`Are you sure you want to delete user '${username}'?`)) return;
+            try {
+                const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+                const d = await res.json();
+                if (!res.ok) throw new Error(d.detail || "Failed to delete user");
+                showToast(`User '${username}' deleted`);
+                loadUsers();
+                loadStats();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        function openCreateUserModal() {
+            document.getElementById('new-user-name').value = '';
+            document.getElementById('new-user-pass').value = '';
+            document.getElementById('modal-user').classList.remove('hidden');
+        }
+
+        async function submitCreateUser(e) {
+            e.preventDefault();
+            const u = document.getElementById('new-user-name').value.trim();
+            const p = document.getElementById('new-user-pass').value;
+            const r = document.getElementById('new-user-role').value;
+            try {
+                const res = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p, role: r })
+                });
+                const d = await res.json();
+                if (!res.ok) throw new Error(d.detail || "Failed to create user");
+                showToast(`User '${u}' created successfully`);
+                closeModal('modal-user');
+                loadUsers();
+                loadStats();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function loadVocab() {
+            try {
+                const res = await fetch('/api/vocabulary');
+                if (!res.ok) return;
+                const d = await res.json();
+                allWords = d.words || [];
+                renderVocabTable(allWords);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderVocabTable(words) {
+            const tbody = document.getElementById('vocab-table-body');
+            tbody.innerHTML = words.map(w => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                    <td class="p-3.5 font-bold text-slate-900 dark:text-white capitalize">${w.english}</td>
+                    <td class="p-3.5 font-indic text-emerald-700 dark:text-emerald-300">${w.hindi || '—'}</td>
+                    <td class="p-3.5 font-indic text-amber-700 dark:text-amber-300">${w.kannada || '—'}</td>
+                    <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${w.category || 'General'}</span></td>
+                    <td class="p-3.5 text-right space-x-2">
+                        <button onclick='editWord(${JSON.stringify(w)})' class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] transition">Edit</button>
+                        <button onclick="deleteWord('${w.english}')" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[11px] transition">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterAdminVocab(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) return renderVocabTable(allWords);
+            const filtered = allWords.filter(w => 
+                w.english.toLowerCase().includes(q) || 
+                (w.hindi && w.hindi.toLowerCase().includes(q)) || 
+                (w.kannada && w.kannada.toLowerCase().includes(q))
+            );
+            renderVocabTable(filtered);
+        }
+
+        function openAddWordModal() {
+            document.getElementById('modal-word-title').textContent = "Add Vocabulary Word";
+            document.getElementById('edit-word-original').value = "";
+            document.getElementById('word-english').value = "";
+            document.getElementById('word-english').disabled = false;
+            document.getElementById('word-hindi').value = "";
+            document.getElementById('word-kannada').value = "";
+            document.getElementById('modal-word').classList.remove('hidden');
+        }
+
+        function editWord(w) {
+            document.getElementById('modal-word-title').textContent = "Edit Vocabulary Word";
+            document.getElementById('edit-word-original').value = w.english;
+            document.getElementById('word-english').value = w.english;
+            document.getElementById('word-english').disabled = true;
+            document.getElementById('word-hindi').value = w.hindi || "";
+            document.getElementById('word-kannada').value = w.kannada || "";
+            document.getElementById('modal-word').classList.remove('hidden');
+        }
+
+        async function submitSaveWord(e) {
+            e.preventDefault();
+            const orig = document.getElementById('edit-word-original').value;
+            const en = document.getElementById('word-english').value.trim().toLowerCase();
+            const hi = document.getElementById('word-hindi').value.trim();
+            const kn = document.getElementById('word-kannada').value.trim();
+
+            try {
+                if (orig) {
+                    const res = await fetch(`/api/admin/vocabulary/${orig}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hindi: hi, kannada: kn })
+                    });
+                    const d = await res.json();
+                    if (!res.ok) throw new Error(d.detail || "Failed to update word");
+                    showToast(`Word '${orig}' updated successfully`);
+                } else {
+                    const res = await fetch('/api/admin/vocabulary', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ english: en, hindi: hi, kannada: kn })
+                    });
+                    const d = await res.json();
+                    if (!res.ok) throw new Error(d.detail || "Failed to add word");
+                    showToast(`Word '${en}' added successfully`);
+                }
+                closeModal('modal-word');
+                loadVocab();
+                loadStats();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function deleteWord(en) {
+            if (!confirm(`Are you sure you want to delete word '${en}' from translations?`)) return;
+            try {
+                const res = await fetch(`/api/admin/vocabulary/${en}`, { method: 'DELETE' });
+                const d = await res.json();
+                if (!res.ok) throw new Error(d.detail || "Failed to delete word");
+                showToast(`Word '${en}' deleted`);
+                loadVocab();
+                loadStats();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function precacheAudio() {
+            const btn = document.getElementById('btn-precache');
+            btn.disabled = true;
+            btn.innerHTML = '<span>Pre-caching Audio in background...</span>';
+            try {
+                const res = await fetch('/api/admin/cache/precache', { method: 'POST' });
+                const d = await res.json();
+                showToast(d.message || "Pre-caching started");
+                setTimeout(loadStats, 3000);
+            } catch (err) {
+                showToast("Error triggering precache", true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Pre-cache All Vocabulary</span>';
+            }
+        }
+
+        async function clearCache() {
+            if (!confirm("Are you sure you want to clear the audio cache?")) return;
+            try {
+                const res = await fetch('/api/admin/cache/clear', { method: 'POST' });
+                const d = await res.json();
+                showToast("Audio cache cleared");
+                loadStats();
+            } catch (err) {
+                showToast("Failed to clear cache", true);
+            }
+        }
+
+        // Gesture collector and retrainer
+        async function loadCollectorStats() {
+            try {
+                const res = await fetch('/api/admin/collector/stats');
+                if (!res.ok) return;
+                const d = await res.json();
+                const list = document.getElementById('collector-sequences-list');
+                const wordsLabel = document.getElementById('train-words-label');
+                if (wordsLabel) wordsLabel.innerText = `${d.total} Words`;
+
+                if (!d.words.length) {
+                    list.innerHTML = '<div class="text-slate-400 dark:text-slate-500 py-3 text-center">No gesture sequences collected yet</div>';
+                    return;
+                }
+
+                list.innerHTML = d.words.map(w => `
+                    <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                        <span class="font-bold text-slate-800 dark:text-slate-200 capitalize">${w.word}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-mono text-[11px] ${w.ready ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-amber-600 dark:text-amber-400'}">${w.samples} samples</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] uppercase font-bold ${w.ready ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'}">
+                                ${w.ready ? 'Ready' : 'Need 6+'}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        let recordPollInterval = null;
+
+        async function recordNewGestureSample() {
+            const word = document.getElementById('rec-word-name').value.trim();
+            const hi = document.getElementById('rec-word-hi').value.trim();
+            const kn = document.getElementById('rec-word-kn').value.trim();
+            const cat = document.getElementById('rec-word-category').value;
+
+            if (!word) {
+                showToast("Please enter a word name (e.g. doctor, medicine)", true);
+                return;
+            }
+
+            const btn = document.getElementById('btn-record-sample');
+            const btnText = document.getElementById('record-btn-text');
+            const overlay = document.getElementById('record-countdown-overlay');
+            const countdownNum = document.getElementById('record-countdown-number');
+            const countdownTxt = document.getElementById('record-countdown-text');
+            const liveStatus = document.getElementById('record-live-status');
+
+            btn.disabled = true;
+            btnText.innerText = "Initiating recording...";
+            overlay.classList.remove('hidden');
+
+            try {
+                const res = await fetch('/api/admin/collector/record', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word, hindi: hi, kannada: kn, category: cat })
+                });
+                const d = await res.json();
+                if (!res.ok) throw new Error(d.detail || "Failed to start recording");
+
+                // Poll status
+                let countdown = 2;
+                countdownNum.innerText = countdown;
+                countdownTxt.innerText = "Get Ready (Hands Down)";
+
+                const timer = setInterval(() => {
+                    countdown--;
+                    if (countdown > 0) {
+                        countdownNum.innerText = countdown;
+                    } else if (countdown === 0) {
+                        countdownNum.innerText = "SIGN!";
+                        countdownNum.className = "text-5xl font-black text-rose-500 animate-pulse";
+                        countdownTxt.innerText = "Perform the Sign Now!";
+                    }
+                }, 1000);
+
+                recordPollInterval = setInterval(async () => {
+                    try {
+                        const sRes = await fetch('/api/admin/collector/status');
+                        const sData = await sRes.json();
+                        if (liveStatus) liveStatus.innerText = sData.message || sData.state;
+                        if (sData.state === 'recording' && sData.message) {
+                            countdownTxt.innerText = sData.message;
+                        }
+
+                        if (sData.state === 'completed') {
+                            clearInterval(recordPollInterval);
+                            clearInterval(timer);
+                            overlay.classList.add('hidden');
+                            btn.disabled = false;
+                            btnText.innerText = "Record 30 Gesture Frames";
+                            countdownNum.className = "text-6xl font-black text-amber-400 animate-bounce";
+                            showToast(sData.message || `30 frames saved for '${word}'!`);
+                            loadCollectorStats();
+                            loadVocab();
+                        } else if (sData.state === 'failed') {
+                            clearInterval(recordPollInterval);
+                            clearInterval(timer);
+                            overlay.classList.add('hidden');
+                            btn.disabled = false;
+                            btnText.innerText = "Record 30 Gesture Frames";
+                            countdownNum.className = "text-6xl font-black text-amber-400 animate-bounce";
+                            showToast(sData.message || "Recording failed, try again.", true);
+                        }
+                    } catch (pollErr) {
+                        console.error(pollErr);
+                    }
+                }, 300);
+
+            } catch (err) {
+                overlay.classList.add('hidden');
+                btn.disabled = false;
+                btnText.innerText = "Record 30 Gesture Frames";
+                showToast(err.message, true);
+            }
+        }
+
+        let retrainPollInterval = null;
+
+        async function triggerRetrain() {
+            const btn = document.getElementById('btn-retrain-model');
+            const btnText = document.getElementById('retrain-btn-text');
+
+            btn.disabled = true;
+            btnText.innerText = "Retraining in progress...";
+
+            try {
+                const res = await fetch('/api/admin/retrain', { method: 'POST' });
+                const d = await res.json();
+                showToast(d.message || "Model retraining started!");
+
+                if (retrainPollInterval) clearInterval(retrainPollInterval);
+                retrainPollInterval = setInterval(checkRetrainStatus, 700);
+            } catch (e) {
+                showToast("Failed to initiate retraining", true);
+                btn.disabled = false;
+                btnText.innerText = "Retrain Model from Browser";
+            }
+        }
+
+        async function checkRetrainStatus() {
+            try {
+                const res = await fetch('/api/admin/retrain/status');
+                if (!res.ok) return;
+                const d = await res.json();
+
+                const statusLabel = document.getElementById('train-status-label');
+                const accLabel = document.getElementById('train-accuracy-label');
+                const wordsLabel = document.getElementById('train-words-label');
+                const progressBar = document.getElementById('train-progress-bar');
+                const logsBox = document.getElementById('retrain-terminal-logs');
+                const btn = document.getElementById('btn-retrain-model');
+                const btnText = document.getElementById('retrain-btn-text');
+
+                if (statusLabel) statusLabel.innerText = d.message || d.state;
+                if (progressBar) progressBar.style.width = `${d.progress || 0}%`;
+                if (accLabel && d.accuracy) accLabel.innerText = d.accuracy;
+                if (wordsLabel && d.words_count) wordsLabel.innerText = `${d.words_count} Words`;
+
+                if (logsBox && d.logs && d.logs.length) {
+                    logsBox.innerHTML = d.logs.map(l => `<div>> ${l}</div>`).join('');
+                    logsBox.scrollTop = logsBox.scrollHeight;
+                }
+
+                if (d.state === 'completed' || d.state === 'error') {
+                    if (retrainPollInterval) clearInterval(retrainPollInterval);
+                    if (btn) btn.disabled = false;
+                    if (btnText) btnText.innerText = "Retrain Model from Browser";
+                    if (d.state === 'completed') {
+                        showToast(`Retraining Complete! ${d.best_model} model active (${d.accuracy})`);
+                        loadStats();
+                    } else if (d.state === 'error') {
+                        showToast(d.message || "Retraining failed", true);
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
